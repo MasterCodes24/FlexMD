@@ -1,0 +1,17 @@
+{
+  "name": "clinicflow-ai",
+  "version": "1.0.0",
+  "description": "ClinicFlow AI - Smart Clinic Assistant for Doctors",
+  "main": "src/ai/index.js",
+  "type": "module",
+  "scripts": {
+    "test:ai": "node src/ai/test-ai-runner.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^0.1.2",
+    "@google/generative-ai": "^0.24.0",
+    "dotenv": "^16.4.7"
+  }
+}
+
