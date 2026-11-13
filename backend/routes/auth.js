@@ -23,8 +23,9 @@ router.post('/register', async (req, res) => {
     );
     res.json({ ok: true, data: r.rows[0] });
   } catch (e) {
+    console.error('[Auth Register Error]:', e.message || e);
     if (e.code === '23505') return fail(res, 409, 'EMAIL_EXISTS', 'Email already registered');
-    fail(res, 500, 'SERVER_ERROR', e.message);
+    fail(res, 500, 'SERVER_ERROR', e.message || 'Database error occurred');
   }
 });
 

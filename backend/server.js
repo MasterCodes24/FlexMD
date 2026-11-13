@@ -7,9 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ── Health ─────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ ok: true }));
 
-// checks the database connection too
 app.get('/health/db', async (req, res) => {
   try {
     await pool.query('SELECT 1');
@@ -18,9 +18,21 @@ app.get('/health/db', async (req, res) => {
     res.status(500).json({ ok: false, error: e.message });
   }
 });
+
+// ── Auth ───────────────────────────────────────────────────────────────────
 const auth = require('./middleware/auth');
 app.use('/auth', require('./routes/auth'));
 
-// temporary test route to check the token works
+// ── Protected test route ───────────────────────────────────────────────────
 app.get('/me', auth, (req, res) => res.json({ ok: true, clinic_id: req.clinicId }));
-app.listen(5000, () => console.log('Server running on port 5000'));
+
+// ── Core clinic routes (all protected by JWT inside each router) ───────────
+app.use('/patients', require('./routes/patients'));
+app.use('/visits', require('./routes/visits'));
+app.use('/dashboard', require('./routes/dashboard'));
+app.use('/revenue', require('./routes/revenue'));
+app.use('/inventory', require('./routes/inventory'));
+
+// ── Start ──────────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`[ClinicFlow Backend] Running on port ${PORT}`));

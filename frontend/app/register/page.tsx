@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Stethoscope, Shield } from "lucide-react";
+import { Eye, EyeOff, Stethoscope, Shield, Loader2 } from "lucide-react";
+import { authApi } from "../../src/lib/api";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [form, setForm] = useState({
     clinicName: "",
@@ -17,11 +22,27 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire up registration API
+    if (!consent) return;
+    setIsLoading(true);
+    setError("");
+    try {
+      await authApi.register({
+        name: form.clinicName,
+        email: form.email,
+        password: form.password,
+        phone: form.phone,
+      });
+      router.push("/login?registered=1");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -42,6 +63,12 @@ export default function RegisterPage() {
           Get started with your clinic dashboard
         </p>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Clinic Name */}
           <div>
@@ -57,7 +84,7 @@ export default function RegisterPage() {
               value={form.clinicName}
               onChange={handleChange}
               placeholder="e.g. City Health Clinic"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 bg-white"
             />
           </div>
 
@@ -75,7 +102,7 @@ export default function RegisterPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="doctor@clinic.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 bg-white"
             />
           </div>
 
@@ -94,7 +121,7 @@ export default function RegisterPage() {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="Create a strong password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm pr-11"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm pr-11 text-gray-900 bg-white"
               />
               <button
                 type="button"
@@ -125,7 +152,7 @@ export default function RegisterPage() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="9876543210"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 bg-white"
               />
             </div>
           </div>
@@ -149,10 +176,17 @@ export default function RegisterPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={!consent}
+            disabled={!consent || isLoading}
             className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
-            Register Clinic
+            {isLoading ? (
+              <>
+                <Loader2 size={18} className="animate-spin mr-2" />
+                Registering...
+              </>
+            ) : (
+              "Register Clinic"
+            )}
           </button>
         </form>
 
